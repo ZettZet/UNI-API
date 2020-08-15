@@ -1,28 +1,19 @@
 from bson import ObjectId, errors
-from flask_login import current_user, login_required, fresh_login_required
+from flask_login import current_user, fresh_login_required, login_required
 from flask_restx import Model, Namespace, Resource, abort, fields, reqparse
-from mongoengine import (
-    Document,
-    DoesNotExist,
-    EmbeddedDocument,
-    EmbeddedDocumentField,
-    EmbeddedDocumentListField,
-    StringField,
-    connect,
-)
+from mongoengine import DoesNotExist
 
+from .db_models import Article
 from .extra import ObjectIdField, check_lang, json
 
-article_ns = Namespace("articles", description="Global route to work with articles")
-articles_db = connect(
-    "articles", alias="articles_alias", host="mongodb://mongo:27017"
-)
+
+article_ns = Namespace(
+    "articles", description="Global route to work with articles")
 
 
 message = article_ns.model(
-    "Message", {"message": fields.String("Description of response"),},
+    "Message", {"message": fields.String("Description of response"), },
 )
-
 
 example = article_ns.model(
     "Example",
@@ -54,7 +45,7 @@ article = article_ns.model(
 
 articel_edit_payload = article_ns.model(
     "Article to edit",
-    {"EnglishPart": fields.Nested(data), "RussianPart": fields.Nested(data),},
+    {"EnglishPart": fields.Nested(data), "RussianPart": fields.Nested(data), },
 )
 
 
@@ -131,7 +122,8 @@ class ArticleResource(Resource):
     def get(self, id):
         try:
             return (
-                article_ns.marshal(Article.objects.get(id=ObjectId(id)), article),
+                article_ns.marshal(Article.objects.get(
+                    id=ObjectId(id)), article),
                 200,
             )
 
@@ -155,30 +147,8 @@ class ArticleResource(Resource):
         except DoesNotExist:
             return {"message": "Article not found"}, 404
 
-    @article_ns.doc(
-        description="Update existing resource (NOT IMPLEMENTED YET)",
-    )
+    @article_ns.doc(description="Update existing resource (NOT IMPLEMENTED YET)",)
     @article_ns.expect(articel_edit_payload, validate=True)
     # TODO
     def put(self, id):
         pass
-
-
-class Example(EmbeddedDocument):
-    ExampleText = StringField()
-    Source = StringField()
-    Uri = StringField(default="", null=True)
-
-
-class Data(EmbeddedDocument):
-    Header = StringField(required=True)
-    Termin = StringField(required=True)
-    Definition = StringField(required=True)
-    Examples = EmbeddedDocumentListField(Example)
-
-
-class Article(Document):
-    EnglishPart = EmbeddedDocumentField(Data)
-    RussianPart = EmbeddedDocumentField(Data)
-
-    meta = {"db_alias": "articles_alias", "collection": "articles"}

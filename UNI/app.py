@@ -1,4 +1,5 @@
 from flask import Flask
+from mongoengine import connect
 
 from uni.apis import api, login_manager
 
@@ -10,4 +11,6 @@ api.init_app(app)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    debug_flag: bool = True
+    db = connect("articles", host=("localhost" if debug_flag == True else "mongo"), port=27017)
+    app.run(debug=debug_flag)

@@ -1,24 +1,22 @@
-import bcrypt
 from bson import ObjectId
 from flask_login import (
     LoginManager,
-    UserMixin,
     current_user,
+    fresh_login_required,
     login_required,
     login_user,
     logout_user,
-    fresh_login_required,
 )
 from flask_restx import Namespace, Resource, fields, reqparse
-from mongoengine import Document, DoesNotExist, NotUniqueError, StringField, connect
+from mongoengine import DoesNotExist, NotUniqueError
 
-from .extra import ObjectIdField
+from .db_models import Account
+from .extra import ObjectIdField, check_hash, gen_hash
 
 login_manager = LoginManager()
 
-account_ns = Namespace("account", description="Global route to work with accounts")
-account_ns.add_model("Message", "Standart model for no-resourse responses")
-users_db = connect("users", alias="users_alias", host="mongodb://mongo:27017")
+account_ns = Namespace(
+    "account", description="Global route to work with accounts")
 
 
 @login_manager.user_loader
@@ -27,15 +25,6 @@ def load_user(user_id):
         return Account.objects.get(id=ObjectId(user_id))
     except DoesNotExist:
         return None
-
-
-def gen_hash(psw: str) -> str:
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(psw.encode("utf8"), salt)
-
-
-def check_hash(hash: str, psw: str) -> bool:
-    return bcrypt.checkpw(psw.encode("utf8"), hash.encode("utf8"))
 
 
 message = account_ns.model(
@@ -103,7 +92,8 @@ class SignUp(Resource):
 
         try:
             new_user = Account(
-                username=args["username"], password_hash=gen_hash(args["password"])
+                username=args["username"], password_hash=gen_hash(
+                    args["password"])
             )
             new_user.save()
 
@@ -143,10 +133,11 @@ class AccountCabinet(Resource):
     def get(self, id):
         try:
             return (
-                account_ns.marshal(Account.objects.get(id=ObjectId(id)), account),
+                account_ns.marshal(Account.objects.get(
+                    id=ObjectId(id)), account),
                 200,
             )
-        except Exception as dne:
+        except Exception:
             return {"message": "User not found"}, 404
 
     @account_ns.doc(
@@ -177,11 +168,3 @@ class AccountCabinet(Resource):
     @fresh_login_required
     def put(self, id):
         pass
-
-
-class Account(UserMixin, Document):
-    username = StringField(max_length=35, unique=True, required=True)
-    password_hash = StringField(max_length=70, required=True)
-    role = StringField(max_length=5, default="USER")
-
-    meta = {"db_alias": "users_alias", "collection": "users"}
