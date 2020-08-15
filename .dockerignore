@@ -1,0 +1,9 @@
+.mypy_cache
+.vscode
+UNI/.venv
+UNI/tests
+UNI/uni.egg-info
+UNI/.gitignore
+UNI/pyproject.toml
+UNI/poetry.lock
+UNI/README.rst
