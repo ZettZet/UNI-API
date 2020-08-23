@@ -1,5 +1,4 @@
-from flask import Flask
-from flask.wrappers import Response
+from flask import Flask, g
 from mongoengine import connect
 from mongoengine.connection import disconnect
 
@@ -14,20 +13,21 @@ api.init_app(app)
 debug_flag: bool = False
 
 
-@app.before_request
+@app.before_first_request
 def before():
     try:
-        db = connect(db="articles", alias="uni_alias", host=(
+        g['db'] = connect(db="articles", alias="uni_alias", host=(
             "localhost" if debug_flag else "mongo"), port=27017)
     except:
         print("!")
 
 
-@app.after_request
-def after(response: Response):
-    disconnect(alias='uni_alias')
+@app.teardown_appcontext
+def after(p0: Exception):
+    db = g.pop('db', None)
 
-    return response
+    if db is not None:
+        disconnect(alias='uni_alias')
 
 
 if __name__ == "__main__":
