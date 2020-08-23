@@ -13,7 +13,7 @@ class Account(UserMixin, Document):
     password_hash = StringField(max_length=70, required=True)
     role = StringField(max_length=5, default="USER")
 
-    meta = {"collection": "users"}
+    meta = {"collection": "users", "db_alias":"uni_alias"}
 
 
 class Example(EmbeddedDocument):
@@ -33,4 +33,4 @@ class Article(Document):
     EnglishPart = EmbeddedDocumentField(Data)
     RussianPart = EmbeddedDocumentField(Data)
 
-    meta = {"collection": "articles"}
+    meta = {"collection": "articles", "db_alias":"uni_alias"}
