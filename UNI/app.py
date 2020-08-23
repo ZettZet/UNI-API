@@ -9,8 +9,9 @@ app.secret_key = b"somesecretkey"
 login_manager.init_app(app)
 api.init_app(app)
 
+debug_flag: bool = False
+
+db = connect("articles", host=("localhost" if debug_flag else "mongo"), port=27017)
 
 if __name__ == "__main__":
-    debug_flag: bool = True
-    db = connect("articles", host=("localhost" if debug_flag == True else "mongo"), port=27017)
     app.run(debug=debug_flag)

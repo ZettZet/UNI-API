@@ -1,10 +1,11 @@
 from bson import ObjectId, errors
-from flask_login import current_user, fresh_login_required, login_required
-from flask_restx import Model, Namespace, Resource, abort, fields, reqparse
+from flask_login import current_user, fresh_login_required
+from flask_restx import Namespace, Resource, fields, reqparse
+import json
 from mongoengine import DoesNotExist
 
 from .db_models import Article
-from .extra import ObjectIdField, check_lang, json
+from .extra import ObjectIdField, check_lang
 
 
 article_ns = Namespace(
@@ -50,7 +51,7 @@ articel_edit_payload = article_ns.model(
 
 
 @article_ns.route(
-    "/search/",
+    "/search",
     doc={
         "description": "Takes string, returns all Articles with a to_search in the Header or Definition. Language doesn`t matter"
     },
@@ -114,12 +115,12 @@ class ArticleList(Resource):
         return {"message": "Created"}, 201
 
 
-@article_ns.route("/<string:id>/", doc={"params": {"id": "ObjectID string"}})
+@article_ns.route("/<string:id>", doc={"params": {"id": "ObjectID string"}})
 class ArticleResource(Resource):
     @article_ns.doc(description="Returns valid Article JSON, else 415")
     @article_ns.response(415, "Invalid ObjectID", model=message)
     @article_ns.response(200, "Success", model=article)
-    def get(self, id):
+    def get(self, id:str):
         try:
             return (
                 article_ns.marshal(Article.objects.get(
@@ -135,7 +136,7 @@ class ArticleResource(Resource):
     @article_ns.response(401, "Unauthorized", model=message)
     @article_ns.response(404, "Not found account with id", model=message)
     @fresh_login_required
-    def delete(self, id):
+    def delete(self, id:str):
         try:
             found_article = Article.objects.get(id=ObjectId(id))
 

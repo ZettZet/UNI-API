@@ -46,7 +46,7 @@ account = account_ns.model(
 )
 
 
-@account_ns.route("/login/", doc={"description": "Login user, accept 2 args"})
+@account_ns.route("/login", doc={"description": "Login user, accept 2 args"})
 class Login(Resource):
     login_parser = (
         reqparse.RequestParser()
@@ -76,7 +76,7 @@ class Login(Resource):
             return {"message": format(dne)}, 401
 
 
-@account_ns.route("/signup/")
+@account_ns.route("/signup")
 class SignUp(Resource):
     signup_parser = (
         reqparse.RequestParser()
@@ -103,7 +103,7 @@ class SignUp(Resource):
             return {"message": f"Not unique login. User already exist {nue}"}, 409
 
 
-@account_ns.route("/logout/")
+@account_ns.route("/logout")
 class Logout(Resource):
     @account_ns.response(200, "Logout success", model=message)
     @account_ns.response(
@@ -125,7 +125,7 @@ class Accounts(Resource):
         return [item for item in Account.objects]
 
 
-@account_ns.route("/<string:id>/")
+@account_ns.route("/<string:id>")
 class AccountCabinet(Resource):
     @account_ns.doc(description="Returns valid Account JSON, else 404")
     @account_ns.response(404, description="Not found account with id", model=message)

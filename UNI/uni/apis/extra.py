@@ -1,10 +1,10 @@
-import json
 import re
 
 from enum import Enum
+from typing import Any
 import bcrypt
 from bson import ObjectId
-from flask_restx import Model, fields
+from flask_restx import  fields
 
 
 class Role(Enum):
@@ -32,7 +32,7 @@ def check_hash(hash: str, psw: str) -> bool:
 class ObjectIdField(fields.Raw):
     __schema_type__ = "string"
 
-    def format(self, value):
+    def format(self, value:Any):
         if isinstance(value, ObjectId):
             return str(value)
         else:
