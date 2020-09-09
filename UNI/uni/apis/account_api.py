@@ -15,8 +15,7 @@ from .extra import ObjectIdField, check_hash, gen_hash
 
 login_manager = LoginManager()
 
-account_ns = Namespace(
-    "account", description="Global route to work with accounts")
+account_ns = Namespace("account", description="Global route to work with accounts")
 
 
 @login_manager.user_loader
@@ -28,7 +27,8 @@ def load_user(user_id):
 
 
 message = account_ns.model(
-    "Message", {"message": fields.String("Description of response")},
+    "Message",
+    {"message": fields.String("Description of response")},
 )
 
 
@@ -92,8 +92,7 @@ class SignUp(Resource):
 
         try:
             new_user = Account(
-                username=args["username"], password_hash=gen_hash(
-                    args["password"])
+                username=args["username"], password_hash=gen_hash(args["password"])
             )
             new_user.save()
 
@@ -133,8 +132,7 @@ class AccountCabinet(Resource):
     def get(self, id):
         try:
             return (
-                account_ns.marshal(Account.objects.get(
-                    id=ObjectId(id)), account),
+                account_ns.marshal(Account.objects.get(id=ObjectId(id)), account),
                 200,
             )
         except Exception:

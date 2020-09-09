@@ -1,3 +1,4 @@
+from typing import List
 from bson import ObjectId, errors
 from flask_login import current_user, fresh_login_required
 from flask_restx import Namespace, Resource, fields, reqparse
@@ -8,12 +9,14 @@ from .db_models import Article
 from .extra import ObjectIdField, check_lang
 
 
-article_ns = Namespace(
-    "articles", description="Global route to work with articles")
+article_ns = Namespace("articles", description="Global route to work with articles")
 
 
 message = article_ns.model(
-    "Message", {"message": fields.String("Description of response"), },
+    "Message",
+    {
+        "message": fields.String("Description of response"),
+    },
 )
 
 example = article_ns.model(
@@ -46,7 +49,10 @@ article = article_ns.model(
 
 articel_edit_payload = article_ns.model(
     "Article to edit",
-    {"EnglishPart": fields.Nested(data), "RussianPart": fields.Nested(data), },
+    {
+        "EnglishPart": fields.Nested(data),
+        "RussianPart": fields.Nested(data),
+    },
 )
 
 
@@ -69,30 +75,36 @@ class ArticleSearch(Resource):
     )
     @article_ns.expect(search_parser)
     def get(self):
-        to_search = self.search_parser.parse_args().get("to_search")
+        to_search: str = self.search_parser.parse_args().get("to_search")
 
-        if check_lang(to_search):
-            return (
-                [
-                    item
-                    for item in Article.objects(
-                        RussianPart__Termin__icontains=to_search,
-                        RussianPart__Definition__icontains=to_search,
-                    )
-                ],
-                200,
-            )
-        else:
-            return (
-                [
-                    item
-                    for item in Article.objects(
-                        EnglishPart__Termin__icontains=to_search,
-                        EnglishPart__Definition__icontains=to_search,
-                    )
-                ],
-                200,
-            )
+        words: List[str] = to_search.split()
+        response: List[Article] = []
+
+        for word in words:
+            if check_lang(word):
+                response = [
+                    *response,
+                    *[
+                        item
+                        for item in Article.objects(
+                            RussianPart__Termin__icontains=words,
+                            RussianPart__Definition__icontains=word,
+                        )
+                    ],
+                ]
+            else:
+                response = [
+                    *response,
+                    *[
+                        item
+                        for item in Article.objects(
+                            EnglishPart__Termin__icontains=word,
+                            EnglishPart__Definition__icontains=word,
+                        )
+                    ],
+                ]
+
+        return response, 200
 
 
 @article_ns.route("/")
@@ -120,11 +132,10 @@ class ArticleResource(Resource):
     @article_ns.doc(description="Returns valid Article JSON, else 415")
     @article_ns.response(415, "Invalid ObjectID", model=message)
     @article_ns.response(200, "Success", model=article)
-    def get(self, id:str):
+    def get(self, id: str):
         try:
             return (
-                article_ns.marshal(Article.objects.get(
-                    id=ObjectId(id)), article),
+                article_ns.marshal(Article.objects.get(id=ObjectId(id)), article),
                 200,
             )
 
@@ -136,7 +147,7 @@ class ArticleResource(Resource):
     @article_ns.response(401, "Unauthorized", model=message)
     @article_ns.response(404, "Not found account with id", model=message)
     @fresh_login_required
-    def delete(self, id:str):
+    def delete(self, id: str):
         try:
             found_article = Article.objects.get(id=ObjectId(id))
 
@@ -148,7 +159,9 @@ class ArticleResource(Resource):
         except DoesNotExist:
             return {"message": "Article not found"}, 404
 
-    @article_ns.doc(description="Update existing resource (NOT IMPLEMENTED YET)",)
+    @article_ns.doc(
+        description="Update existing resource (NOT IMPLEMENTED YET)",
+    )
     @article_ns.expect(articel_edit_payload, validate=True)
     # TODO
     def put(self, id):
