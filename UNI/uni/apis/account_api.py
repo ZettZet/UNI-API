@@ -11,11 +11,12 @@ from flask_restx import Namespace, Resource, fields, reqparse
 from mongoengine import DoesNotExist, NotUniqueError
 
 from .db_models import Account
-from .extra import ObjectIdField, check_hash, gen_hash
+from .extra import ObjectIdField, check_hash, gen_hash, Role
 
 login_manager = LoginManager()
 
-account_ns = Namespace("account", description="Global route to work with accounts")
+account_ns = Namespace(
+    "account", description="Global route to work with accounts")
 
 
 @login_manager.user_loader
@@ -39,7 +40,7 @@ account = account_ns.model(
         "username": fields.String(required=True),
         "password_hash": fields.String(required=True),
         "role": fields.String(
-            description="Possible three states: USER, MODER, ADMIN", default="USER"
+            description="Possible three states: USER, MODER, ADMIN", default=Role.User.value
         ),
     },
     mask="id,username,role",
@@ -92,7 +93,8 @@ class SignUp(Resource):
 
         try:
             new_user = Account(
-                username=args["username"], password_hash=gen_hash(args["password"])
+                username=args["username"], password_hash=gen_hash(
+                    args["password"])
             )
             new_user.save()
 
@@ -129,10 +131,11 @@ class AccountCabinet(Resource):
     @account_ns.doc(description="Returns valid Account JSON, else 404")
     @account_ns.response(404, description="Not found account with id", model=message)
     @account_ns.response(200, description="Success", model=account)
-    def get(self, id):
+    def get(self, id: str):
         try:
             return (
-                account_ns.marshal(Account.objects.get(id=ObjectId(id)), account),
+                account_ns.marshal(Account.objects.get(
+                    id=ObjectId(id)), account),
                 200,
             )
         except Exception:
@@ -146,12 +149,12 @@ class AccountCabinet(Resource):
     @account_ns.response(401, "Unauthorized", model=message)
     @account_ns.response(404, "Not found account with id", model=message)
     @fresh_login_required
-    def delete(self, id):
+    def delete(self, id: str):
         try:
             found_user = Account.objects.get(id=ObjectId(id))
 
-            if id == current_user.get_id() or current_user.role == "ADMIN":
-                if current_user.role != "ADMIN":
+            if id == current_user.get_id() or current_user.role == Role.Admin.value:
+                if current_user.role != Role.Admin.value:
                     logout_user()
 
                 found_user.delete()

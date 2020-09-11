@@ -10,7 +10,7 @@ app.secret_key = b"somesecretkey"
 login_manager.init_app(app)
 api.init_app(app)
 
-debug_flag: bool = False
+debug_flag: bool = True
 
 
 @app.before_first_request

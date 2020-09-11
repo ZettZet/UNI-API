@@ -6,12 +6,13 @@ from mongoengine import (
     EmbeddedDocumentListField,
     StringField,
 )
+from .extra import Role
 
 
 class Account(UserMixin, Document):
     username = StringField(max_length=35, unique=True, required=True)
     password_hash = StringField(max_length=70, required=True)
-    role = StringField(max_length=5, default="USER")
+    role = StringField(max_length=5, default=Role.User.value)
 
     meta = {"collection": "users", "db_alias": "uni_alias"}
 
