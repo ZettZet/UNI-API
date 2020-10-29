@@ -1,6 +1,6 @@
 version: "3.3"
 
-services: 
+services:
 
     mongo:
         image: mongo
@@ -10,15 +10,15 @@ services:
             - "~/container_volumes/mongo/data/db:/data/db"
             - "~/container_logs/mongo/log:/var/log/mongodb"
 
-    nginx: 
+    nginx:
         build: ./nginx
         container_name: webserver
         restart: always
-        ports: 
+        ports:
             - "80:80"
         volumes:
             - "~/container_logs/nginx/log:/var/log/nginx"
-        depends_on: 
+        depends_on:
             - flask
 
     flask:
@@ -27,9 +27,9 @@ services:
         restart: always
         environment:
             MONGO_HOST_NAME: "mongo"
-        expose: 
+        expose:
             - 8080
         volumes:
             - "~/container_logs/flask/log:/var/log/wsgi"
-        depends_on: 
+        depends_on:
             - mongo

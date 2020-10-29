@@ -1,3 +1,5 @@
+# type:ignore
+
 from flask import Flask, g
 from mongoengine import connect
 from mongoengine.connection import disconnect

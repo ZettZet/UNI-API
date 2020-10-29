@@ -226,5 +226,5 @@ pip-selfcheck.json
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,flask,venv
 .vscode/settings.json
 
-
+nginx
 typings

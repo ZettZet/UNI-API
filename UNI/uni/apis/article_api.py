@@ -1,3 +1,6 @@
+# type:ignore
+import re
+
 from bson import ObjectId, errors
 from flask_login import current_user, fresh_login_required
 from flask_restx import Namespace, Resource, fields, reqparse
@@ -66,6 +69,28 @@ class ArticleSearch(Resource):
         "to_search", type=str, required=True, location="args"
     )
 
+    def _form(self, is_russian: bool, to_search: str):
+        regex = re.compile(fr'(?<![\wа-я])({to_search})', re.IGNORECASE)
+
+        settings = {True: {
+            'RussianPart.Termin': regex,
+        },
+            False: {
+            'EnglishPart.Termin': regex,
+        }}
+
+        temp = [item for item in Article.objects(__raw__=settings[is_russian])]
+
+        def sort(article):
+            if is_russian:
+                return article.RussianPart.Termin.lower().index(to_search)
+            else:
+                return article.EnglishPart.Termin.lower().index(to_search)
+
+        temp = sorted(temp, key=sort)
+
+        return temp
+
     @article_ns.marshal_list_with(
         article,
         code=200,
@@ -75,29 +100,7 @@ class ArticleSearch(Resource):
     @article_ns.expect(search_parser)
     def get(self):
         to_search = self.search_parser.parse_args().get("to_search")
-
-        if check_lang(to_search):
-            return (
-                [
-                    item
-                    for item in Article.objects(
-                        RussianPart__Termin__icontains=to_search,
-                        RussianPart__Definition__icontains=to_search,
-                    )
-                ],
-                200,
-            )
-        else:
-            return (
-                [
-                    item
-                    for item in Article.objects(
-                        EnglishPart__Termin__icontains=to_search,
-                        EnglishPart__Definition__icontains=to_search,
-                    )
-                ],
-                200,
-            )
+        return (self._form(check_lang(to_search), to_search), 200)
 
 
 @article_ns.route("/")
