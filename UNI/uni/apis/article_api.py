@@ -14,9 +14,6 @@ from .extra import ObjectIdField, check_lang
 
 article_ns = Namespace(
     "articles", description="Global route to work with articles")
-articles_db = connect(
-    "articles", alias="articles_alias", host="mongodb://mongo:27017"
-)
 
 
 message = article_ns.model(
@@ -58,6 +55,29 @@ articel_edit_payload = article_ns.model(
 )
 
 
+def form(is_russian: bool, to_search: str):
+    regex = re.compile(fr'(?<![\wа-я])({to_search})', re.IGNORECASE)
+
+    settings = {True: {
+        'RussianPart.Termin': regex,
+    },
+        False: {
+        'EnglishPart.Termin': regex,
+    }}
+
+    temp = [item for item in Article.objects(__raw__=settings[is_russian])]
+
+    def sort(article):
+        if is_russian:
+            return article.RussianPart.Termin.lower().index(to_search)
+        else:
+            return article.EnglishPart.Termin.lower().index(to_search)
+
+    temp = sorted(temp, key=sort)
+
+    return temp
+
+
 @article_ns.route(
     "/search/",
     doc={
@@ -69,28 +89,6 @@ class ArticleSearch(Resource):
         "to_search", type=str, required=True, location="args"
     )
 
-    def _form(self, is_russian: bool, to_search: str):
-        regex = re.compile(fr'(?<![\wа-я])({to_search})', re.IGNORECASE)
-
-        settings = {True: {
-            'RussianPart.Termin': regex,
-        },
-            False: {
-            'EnglishPart.Termin': regex,
-        }}
-
-        temp = [item for item in Article.objects(__raw__=settings[is_russian])]
-
-        def sort(article):
-            if is_russian:
-                return article.RussianPart.Termin.lower().index(to_search)
-            else:
-                return article.EnglishPart.Termin.lower().index(to_search)
-
-        temp = sorted(temp, key=sort)
-
-        return temp
-
     @article_ns.marshal_list_with(
         article,
         code=200,
@@ -100,7 +98,7 @@ class ArticleSearch(Resource):
     @article_ns.expect(search_parser)
     def get(self):
         to_search = self.search_parser.parse_args().get("to_search")
-        return (self._form(check_lang(to_search), to_search), 200)
+        return (form(check_lang(to_search), to_search), 200)
 
 
 @article_ns.route("/")
