@@ -1,6 +1,7 @@
 # type:ignore
 
 from flask import Flask, g
+from flask_cors import CORS
 from mongoengine import connect
 from mongoengine.connection import disconnect
 
@@ -8,6 +9,7 @@ from uni.apis import api, login_manager
 
 app = Flask(__name__)
 app.secret_key = b"somesecretkey"
+CORS(app)
 
 login_manager.init_app(app)
 api.init_app(app)
