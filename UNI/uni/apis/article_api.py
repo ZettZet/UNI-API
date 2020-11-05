@@ -54,10 +54,21 @@ articel_edit_payload = article_ns.model(
     {"EnglishPart": fields.Nested(data), "RussianPart": fields.Nested(data), },
 )
 
-most_offten = article_ns.model(
-    "Most offten search",
+most_often = article_ns.model(
+    "Most often search",
     {"id": ObjectIdField(), "name": fields.String(), },
 )
+
+
+@article_ns.route('/most_often')
+class ArticleMostOften(Resource):
+
+    @article_ns.marshal_list_with(most_often)
+    def get(self):
+        temp = [ObjectId('5f9b3d9949e7b01c10a22be7'), ObjectId(
+            '5f9b3d9949e7b01c10a22be1'), ObjectId('5f9b3d9949e7b01c10a22bf8'), ObjectId('5f9b3d9949e7b01c10a22bff'), ObjectId('5f9b3d9949e7b01c10a22c0d')]
+        return [{'id': item, 'name': Article.objects(
+            id=item).first().EnglishPart.Header} for item in temp]
 
 
 @article_ns.route(
@@ -164,14 +175,3 @@ class ArticleResource(Resource):
     # TODO
     def put(self, id):
         pass
-
-
-@article_ns.route('/most_offten')
-class ArticleMostOfften(Resource):
-
-    @article_ns.marshal_list_with(most_offten)
-    def get(self):
-        temp = [ObjectId('5f9b3d9949e7b01c10a22be7'), ObjectId(
-            '5f9b3d9949e7b01c10a22be1'), ObjectId('5f9b3d9949e7b01c10a22bf8'), ObjectId('5f9b3d9949e7b01c10a22bff'), ObjectId('5f9b3d9949e7b01c10a22c0d')]
-        return [{'id': item, 'name': Article.objects(
-            id=item).EnglishPart.Title} for item in temp]
