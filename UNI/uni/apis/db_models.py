@@ -35,3 +35,13 @@ class Article(Document):
     RussianPart = EmbeddedDocumentField(Data)
 
     meta = {"collection": "articles", "db_alias": "uni_alias"}
+
+
+class Specialist(Document):
+    FirstName = StringField(required=True)
+    SecondName = StringField(required=True)
+    MiddleName = StringField(required=True)
+    Description = StringField(required=True)
+    PhotoUri = StringField(required=True)
+
+    meta = {"collection": "specialists", "db_alias": "uni_alias"}
