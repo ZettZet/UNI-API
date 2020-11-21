@@ -6,7 +6,6 @@ from flask_login import current_user, fresh_login_required
 from flask_restx import Namespace, Resource, fields, reqparse
 from mongoengine import (
     DoesNotExist,
-    connect,
 )
 
 from .db_models import Article
